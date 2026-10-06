@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <math.h>
 
 using namespace std;
 
@@ -21,10 +22,11 @@ using namespace std;
 // We do this until we have all the remainders and then we combine them into a string and the program is done
 // We then ask if they want to do another conversion.
 
-bool ValidateBase(int num);
+bool ValidatedBase(int num, uint8_t& sourceBase, string whichBase);
 bool ValidateInput(char inputNum, uint8_t sourceBase);
 
-string ConvertNum();
+int ReturnRealVal(char numIndex, uint8_t base);
+string ConvertNum(string inputNum, uint8_t sourceBase, uint8_t targetBase);
 
 int ConvertToDecimal();
 string ConvertFromDecimal();
@@ -38,6 +40,9 @@ int main()
 	{
 		// I will first initialize all my variables
 		string inputNum{}; // the reason it is a string is we also need to get 'A' - 'F'
+		string outputNum{"Nothing Changed"};
+		char endProgram{};
+
 		uint8_t sourceBase{}; // should only contain 2,8,10 and 16
 		uint8_t targetBase{}; // should only contain 2,8,10 and 16
 
@@ -48,74 +53,133 @@ int main()
 		{
 			cout << "Welcome to the Numbering System Calculator!\n";
 			cout << "------------------------------------------------------------\n";
-			cout << "Please Enter the following inputs : \n\n";
+			cout << "Please Enter the following inputs : \n";
 			firstCycle = false;
 		}
 
 		// I will get the number and a valid source Base
-		cout << "The number to convert: \n >> ";
+		cout << "\nThe number to convert: \n >> ";
 		cin >> inputNum;
 		cout << "The source base (i.e., the base to convert From): \n >> ";
 		cin >> base;
 
-		if (ValidateBase(base))
-			sourceBase = (uint8_t)base;
-		else
-		{
-			cout << "Invalid Source Base, please try again!\n\n";
-			continue;
-		}
+		if (!ValidatedBase(base, sourceBase, "Source Base")) continue;
 
 		// Now that we have the number I will verify if the Input matches the given Base format
 		inputStringSize = size(inputNum);
 
+		bool isItValid{};
+
 		for (int i = 0; i < inputStringSize; i++)
 		{
-			bool isItValid = ValidateInput(inputNum[i], base);
+			isItValid = ValidateInput(inputNum[i], base);
 
 			if (!isItValid)
 			{
-				cout << "The value " << inputNum[i]
-					<< " does not match the source Base " << base << "\n\n"; // FIX THIS PART
+				cout << "\nThe value " << inputNum[i]
+					<< " does not match the source Base " << base << "\n\n";
 
 				break;
 			}
 		}
+		if (!isItValid) continue;
 
+		cout << "The target base (i.e., the base to convert To): \n >> ";
+		cin >> base;
+
+		if (!ValidatedBase(base, targetBase, "Target Base")) continue;
+
+		outputNum = ConvertNum(inputNum, sourceBase, targetBase);
+
+		cout << "\nThe result of converting the number " << inputNum
+			<< " from base " << (int)sourceBase
+			<< " to base " << (int)targetBase 
+			<<" is: \n >> " << outputNum;
+
+		// Just checks if the user wants to continue or not.
+		while (programRunning)
+		{
+			cout << "\nDo you wish to continue with other numbers?\n"
+				<< "Enter(Y) to continue\n"
+				<< "Enter(N) to quit \n >> ";
+
+			// This string just allows me to search for the first entry of the input instead of looking through every input as a character of the string.
+			string justAChecker{};
+
+			cin >> justAChecker;
+
+			endProgram = justAChecker[0];
+
+			if (endProgram == 'y' || endProgram == 'Y')
+				break;
+			else if (endProgram == 'n' || endProgram == 'N')
+				programRunning = false;
+			else
+			{
+				cout << "\n\nWe didn't get that please try again!\n";
+				continue;
+			}
+		}
 	} 
 	while (programRunning);
-		
 
 	return 0;
 }
 
 // This function checks if the given number matches a Base
-bool ValidateBase(int num)
+bool ValidatedBase(int num, uint8_t& base, string whichBase)
 {
+	base = (uint8_t)num;
+
 	if (num == 2 || num == 8 || num == 10 || num == 16)
 		return true;
 
+	cout << "\nInvalid " << whichBase << ", please try again!\n\n";
 	return false;
 }
 
 // This function will compare the given input with the sourceBase character by character and then validate or invalidate it
-bool ValidateInput(char inputNumIndex, uint8_t sourceBase) // Fix THIS PART
+bool ValidateInput(char inputNumIndex, uint8_t sourceBase)
 {
-	// char something = 'A'; here 'A' value = 65
-
-	bool validating{ true };
-
-	while (validating)
-	{
-		if (inputNumIndex >= '0' && inputNumIndex <= '9')
-			break;
-
-		else if (inputNumIndex >= 'A' && inputNumIndex <= 'F')
-			inputNumIndex -= inputNumIndex + sourceBase;
-
-		else if (inputNumIndex >= 'a' && inputNumIndex <= 'f')
-			inputNumIndex -= inputNumIndex + sourceBase;
-	}		
+	inputNumIndex = ReturnRealVal(inputNumIndex, sourceBase);
 
 	return inputNumIndex < sourceBase;
+}
+
+int ReturnRealVal(char numIndex, uint8_t base)
+{
+	if (numIndex >= '0' && numIndex <= '9')
+		numIndex -= '0';
+
+	else if (numIndex >= 'A' && numIndex <= 'F')
+		numIndex -= 'A' + 10;
+
+	else if (numIndex >= 'a' && numIndex <= 'f')
+		numIndex -= 'a' + 10;
+
+	return numIndex;
+}
+
+string ConvertNum(string inputNum, uint8_t sourceBase, uint8_t targetBase)
+{
+	if (sourceBase == targetBase) return inputNum;
+
+	string returnVal{};
+	int decimalVal{};
+	short stringSize{ (short)size(inputNum) };
+	
+
+	for (int i = 0; i < stringSize; i++)
+	{
+		decimalVal += (ReturnRealVal(inputNum[i], sourceBase) * pow(sourceBase, (stringSize - (i + 1))));
+	}
+
+	if(targetBase == 10)
+		 returnVal = to_string(decimalVal);
+	else
+	{
+
+	}
+
+	return returnVal;
 }
