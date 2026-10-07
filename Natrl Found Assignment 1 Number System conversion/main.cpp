@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include <math.h>
+#include <cstdint>
 
 using namespace std;
 
@@ -25,11 +25,10 @@ using namespace std;
 bool ValidatedBase(int num, uint8_t& sourceBase, string whichBase);
 bool ValidateInput(char inputNum, uint8_t sourceBase);
 
-int ReturnRealVal(char numIndex, uint8_t base);
-string ConvertNum(string inputNum, uint8_t sourceBase, uint8_t targetBase);
+int ReturnRealVal(char numIndex);
+char ConvertNumToChar(short num);
 
-int ConvertToDecimal();
-string ConvertFromDecimal();
+string ConvertNum(string inputNum, uint8_t sourceBase, uint8_t targetBase);
 
 int main()
 {
@@ -58,7 +57,7 @@ int main()
 		}
 
 		// I will get the number and a valid source Base
-		cout << "\nThe number to convert: \n >> ";
+		cout << "\nThe number to convert(Has to be less than 19 digits): \n >> ";
 		cin >> inputNum;
 		cout << "The source base (i.e., the base to convert From): \n >> ";
 		cin >> base;
@@ -66,13 +65,13 @@ int main()
 		if (!ValidatedBase(base, sourceBase, "Source Base")) continue;
 
 		// Now that we have the number I will verify if the Input matches the given Base format
-		inputStringSize = size(inputNum);
+		inputStringSize = (int)size(inputNum);
 
 		bool isItValid{};
 
 		for (int i = 0; i < inputStringSize; i++)
 		{
-			isItValid = ValidateInput(inputNum[i], base);
+			isItValid = ValidateInput(inputNum[i], sourceBase);
 
 			if (!isItValid)
 			{
@@ -126,7 +125,7 @@ int main()
 	return 0;
 }
 
-// This function checks if the given number matches a Base
+// This function checks if the given number matches a Base, and also converts the int base form into a uint8_t type
 bool ValidatedBase(int num, uint8_t& base, string whichBase)
 {
 	base = (uint8_t)num;
@@ -139,25 +138,38 @@ bool ValidatedBase(int num, uint8_t& base, string whichBase)
 }
 
 // This function will compare the given input with the sourceBase character by character and then validate or invalidate it
-bool ValidateInput(char inputNumIndex, uint8_t sourceBase)
+bool ValidateInput(char input, uint8_t base)
 {
-	inputNumIndex = ReturnRealVal(inputNumIndex, sourceBase);
+	int realValue = ReturnRealVal(input);
 
-	return inputNumIndex < sourceBase;
+	return realValue >= 0 && realValue < base;
 }
 
-int ReturnRealVal(char numIndex, uint8_t base)
+// Convert character values into real integers
+int ReturnRealVal(char numIndex)
 {
 	if (numIndex >= '0' && numIndex <= '9')
-		numIndex -= '0';
+		return numIndex - '0';
 
 	else if (numIndex >= 'A' && numIndex <= 'F')
-		numIndex -= 'A' + 10;
+		return numIndex - 'A' + 10;
 
 	else if (numIndex >= 'a' && numIndex <= 'f')
-		numIndex -= 'a' + 10;
+		return numIndex - 'a' + 10;
 
-	return numIndex;
+	return -1;
+}
+
+// convert real integers into Character values
+char ConvertNumToChar(short num)
+{
+	if (num >= 0 && num <= 9)
+		return num + '0';
+
+	else if (num >= 10 && num <= 15)
+		return num + 'A' - 10;
+
+	return '?';
 }
 
 string ConvertNum(string inputNum, uint8_t sourceBase, uint8_t targetBase)
@@ -168,18 +180,26 @@ string ConvertNum(string inputNum, uint8_t sourceBase, uint8_t targetBase)
 	int decimalVal{};
 	short stringSize{ (short)size(inputNum) };
 	
-
 	for (int i = 0; i < stringSize; i++)
 	{
-		decimalVal += (ReturnRealVal(inputNum[i], sourceBase) * pow(sourceBase, (stringSize - (i + 1))));
+		decimalVal = decimalVal * sourceBase + ReturnRealVal(inputNum[i]);
 	}
 
-	if(targetBase == 10)
-		 returnVal = to_string(decimalVal);
-	else
+	if (decimalVal == 0) return "0";
+
+	int currentVal = decimalVal;
+	short theRemainder{};
+
+	string convertedVal{};
+
+	while (currentVal > 0)
 	{
+		theRemainder = currentVal % targetBase;
 
+		currentVal /= targetBase;
+
+		convertedVal = string(1, ConvertNumToChar(theRemainder)) + convertedVal;
 	}
 
-	return returnVal;
+	return convertedVal;
 }
