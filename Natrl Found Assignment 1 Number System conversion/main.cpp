@@ -30,6 +30,9 @@ char ConvertNumToChar(short num);
 
 string ConvertNum(string inputNum, uint8_t sourceBase, uint8_t targetBase);
 
+long long ConvertToDecimal(string value, uint8_t base);
+string ConvertFromDecimal(long long decimal, string returnVal, uint8_t targetBase);
+
 int main()
 {
 	bool programRunning{ true };
@@ -37,7 +40,7 @@ int main()
 
 	do
 	{
-		// I will first initialize all my variables
+		// I will first initialize all my variables, I am initializing inside of dowhile because I want to reset them every time i restart.
 		string inputNum{}; // the reason it is a string is we also need to get 'A' - 'F'
 		string outputNum{"Nothing Changed"};
 		char endProgram{};
@@ -57,7 +60,7 @@ int main()
 		}
 
 		// I will get the number and a valid source Base
-		cout << "\nThe number to convert(Has to be less than 19 digits): \n >> ";
+		cout << "\nThe number to convert: \n >> ";
 		cin >> inputNum;
 		cout << "The source base (i.e., the base to convert From): \n >> ";
 		cin >> base;
@@ -177,29 +180,39 @@ string ConvertNum(string inputNum, uint8_t sourceBase, uint8_t targetBase)
 	if (sourceBase == targetBase) return inputNum;
 
 	string returnVal{};
-	int decimalVal{};
-	short stringSize{ (short)size(inputNum) };
-	
-	for (int i = 0; i < stringSize; i++)
-	{
-		decimalVal = decimalVal * sourceBase + ReturnRealVal(inputNum[i]);
-	}
+	long long decimalVal = ConvertToDecimal(inputNum, sourceBase);
 
 	if (decimalVal == 0) return "0";
 
-	int currentVal = decimalVal;
-	short theRemainder{};
 
-	string convertedVal{};
+	return ConvertFromDecimal(decimalVal, returnVal, targetBase);
+}
 
-	while (currentVal > 0)
+long long ConvertToDecimal(string value, uint8_t sourceBase)
+{
+	long long decimalVal{};
+	short stringSize{ (short)size(value) };
+
+	for (int i = 0; i < stringSize; i++)
 	{
-		theRemainder = currentVal % targetBase;
-
-		currentVal /= targetBase;
-
-		convertedVal = string(1, ConvertNumToChar(theRemainder)) + convertedVal;
+		decimalVal = decimalVal * sourceBase + ReturnRealVal(value[i]);
 	}
 
-	return convertedVal;
+	return decimalVal;
+}
+
+string ConvertFromDecimal(long long decimal, string returnVal, uint8_t targetBase)
+{
+	short theRemainder{};
+
+	while (decimal > 0)
+	{
+		theRemainder = decimal % targetBase;
+
+		decimal /= targetBase;
+
+		returnVal = string(1, ConvertNumToChar(theRemainder)) + returnVal;
+	}
+
+	return returnVal;
 }
